@@ -448,7 +448,147 @@ http://vision.stanford.edu/teaching/cs231n-demos/linear-classify/
 
 ### image feature
 
+因为多模态等种种原因，直接输入图像本身其结果是不太好的，在深度学习出现以前，人们常常采用这种方案
+
+![image-20200807110355161](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807110355161.png)
+
+计算各种特征代表
+
+
+
+通过特征转换，复杂的数据集会变得更加可分
+
+![image-20200807110612784](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807110612784.png)
+
+color histogram
+
+可以直观的看出颜色分量情况
+
+HoG
+
+边缘方向，得到不同边缘情况
+
 bags of word
+
+灵感来自于nlp词频
+
+
+
+## Backpropagation and Neural Networks
+
+
+
+### computational graphs
+
+![image-20200807111852701](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807111852701.png)
+
+该图可以表示任何的函数，其中的节点代表了要执行的每一步计算
+
+反向传播技术，递归地调用链式法则，计算图中的每一个中间变量的梯度
+
+### Backpropagation
+
+![image-20200807113151290](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807113151290.png)
+
+在这里我们想得到f在x y z上的梯度，也就是展示x y z对f的影响
+
+如果我们需要计算f在y上的梯度，因为其中有一个加号，因此计算并不是直接的，利用链式法则分成了两步 -4 * 1 = -4
+
+<img src="C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807113737146.png" alt="image-20200807113737146" style="zoom:80%;" />
+
+每一次都是对其中某一个计算节点的处理，相较于对于整个表达式的一次性处理，这种方式在复杂的表达式中会更加实用，因为每一个节点的梯度计算仅仅是一些基本的求导式子
+
+
+
+![image-20200807114611652](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807114611652.png)
+
+
+
+每次正向经过一个节点，我们都可以得到local gradient，因此在计算出代价函数L以后，我们就已经得到了L在z上的导数，在反向传播中，这些数值从上游被传回，然后通过链式法则再得到之后的对下游的要传递的梯度值
+
+![image-20200807115601462](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807115601462.png)
+
+计算本地梯度时的变量是当前节点的值
+
+![image-20200807115808455](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807115808455.png)
+
+对于乘法节点和加法节点的计算可以参照前一个example
+
+对于这个计算图，其拆解成节点的方式其实不唯一，并不一定要保持在最简的形式，你可以聚合任何的节点，只要你能够计算出该节点的梯度计算公式
+
+![image-20200807121102389](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807121102389.png)
+
+
+
+### Patterns
+
+![image-20200807121601527](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807121601527.png)
+
+可以看到这个加法器类似于一个分发器，对于上游传下来的梯度，它不做处理，然后发给下游（1*xxx = xxx）
+
+Q1: what is a max gate?这个max gate的本地梯度是什么？
+
+![image-20200807121802094](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807121802094.png)
+
+对其中一个节点为1（也就是最大值那个节点），对另一个节点为0，其功能类似于一个路由器。
+
+我们还记得求f在x上的梯度相当于得到x对f的影响，因此在这个意义上，只有最大值z对其中的后续的变量产生了影响，那么计算梯度的时候，自然其分发给下游的时候只偏爱z
+
+Q2：乘法门呢？
+
+类似于一个switcher转换器，它收到上游传回来的梯度值，然后根据传入的两个变量情况进行缩放
+
+![image-20200807122743813](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807122743813.png)
+
+出现分支时，我们需要将影响相加，在正向传播时，前面这个总节点的改变会对后面两个分支产生影响，同理在反向传播时，我们也要收集两个分支带来的影响
+
+
+
+我们再看看拓展到高维向量的情况
+
+![image-20200807123448220](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807123448220.png)
+
+
+
+![image-20200807124139718](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807124139718.png)
+
+注：雅克比
+
+![image-20200807123902539](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807123902539.png)
+
+也就是输出的某个元素对输入的某个元素逐个偏导
+
+雅克比矩阵是一个对角矩阵，因为这个计算其实是对每个元素分别进行的，所以仅有x_i对y_i有影响
+
+![image-20200807162551342](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807162551342.png)
+
+
+
+计算W对q的影响，我们先取其中的一个元素也就是标量来看(不好意思，推导过程忘记加符号标记了)
+
+![A3033C8BEF7377F6CD9671346F1CAB53](D:\downloads\Tencent\MobileFile\A3033C8BEF7377F6CD9671346F1CAB53.png)
+
+这里的![image-20200807163010397](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807163010397.png)实际上是一个雅克比矩阵，也就是w的每一个元素对w的每一个元素的影响，我们不列出这个矩阵，因为它太大了
+
+(这里W有问题，不要在意)
+
+
+
+
+
+![image-20200807125803001](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807125803001.png)
+
+![image-20200807164242379](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807164242379.png)
+
+### Neural Networks
+
+堆叠形成一个比较复杂的非线性函数
+
+激活函数类似于神经元的触发放电过程？
+
+
+
+
 
 
 
@@ -458,6 +598,7 @@ bags of word
 
 * 数值梯度是个什么玩意，哦？？有限元去估计
 * 蒙特卡洛？
+* 这不是疑惑，就是我忘了微积分的计算公式![image-20200807120312379](C:\Users\THINKPAD\AppData\Roaming\Typora\typora-user-images\image-20200807120312379.png)
 
-
+* 雅克比矩阵？
 
